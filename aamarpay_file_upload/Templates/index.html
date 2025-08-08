@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - aamarPay File Upload System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Hero Section -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-cloud-upload-alt fa-4x text-primary mb-3"></i>
+                <h1 class="display-5 fw-bold">aamarPay File Upload System</h1>
+                <p class="lead">Upload and process your documents securely after payment verification</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
+                {% else %}
+                    <a href="/admin/" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login to Continue
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-credit-card fa-3x text-success mb-3"></i>
+                        <h5>Secure Payment</h5>
+                        <p class="text-muted">Pay ৳100 securely through aamarPay gateway</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-file-alt fa-3x text-info mb-3"></i>
+                        <h5>File Processing</h5>
+                        <p class="text-muted">Upload .txt and .docx files for word counting</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
+                        <h5>Analytics</h5>
+                        <p class="text-muted">Track your uploads and payment history</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Status Messages -->
+        {% if request.GET.payment %}
+            <div class="mt-4">
+                {% if request.GET.payment == 'success' %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Payment Successful!</strong> You can now upload files.
+                    </div>
+                {% elif request.GET.payment == 'failed' %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>Payment Failed!</strong> Please try again.
+                    </div>
+                {% elif request.GET.payment == 'cancelled' %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Payment Cancelled!</strong> You cancelled the payment.
+                    </div>
+                {% elif request.GET.payment == 'error' %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-bug me-2"></i>
+                        <strong>Payment Error!</strong> Something went wrong. Please contact support.
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

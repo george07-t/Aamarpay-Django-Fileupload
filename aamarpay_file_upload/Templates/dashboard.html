@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - aamarPay File Upload System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+        <p class="lead">Welcome back, {{ user.get_full_name|default:user.username }}!</p>
+    </div>
+</div>
+
+<!-- Payment Status Alert -->
+{% if has_payment %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>Payment Completed!</strong> You can now upload files.
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Payment Required!</strong> Please make a payment of ৳100 to upload files.
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- User Profile Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>User Profile</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Username:</strong> {{ user.username }}</p>
+                        <p><strong>Email:</strong> {{ user.email|default:"Not provided" }}</p>
+                        <p><strong>First Name:</strong> {{ user.first_name|default:"Not provided" }}</p>
+                        <p><strong>Last Name:</strong> {{ user.last_name|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Member Since:</strong> {{ user.date_joined|date:"M d, Y" }}</p>
+                        <p><strong>Last Login:</strong> {{ user.last_login|date:"M d, Y H:i"|default:"Never" }}</p>
+                        <p><strong>Status:</strong>
+                            {% if user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Account Type:</strong>
+                            {% if user.is_superuser %}
+                            <span class="badge bg-danger">Super Admin</span>
+                            {% elif user.is_staff %}
+                            <span class="badge bg-warning">Staff</span>
+                            {% else %}
+                            <span class="badge bg-info">Regular User</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Status Messages -->
+{% if request.GET.payment %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% if request.GET.payment == 'success' %}
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>Payment Successful!</strong> You can now upload files.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% elif request.GET.payment == 'failed' %}
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-times-circle me-2"></i>
+            <strong>Payment Failed!</strong> Please try again.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% elif request.GET.payment == 'cancelled' %}
+        <div class="alert alert-warning alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Payment Cancelled!</strong> You cancelled the payment.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% elif request.GET.payment == 'error' %}
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-bug me-2"></i>
+            <strong>Payment Error!</strong> Something went wrong.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-credit-card fa-3x text-primary mb-3"></i>
+                <h5>Make Payment</h5>
+                <p class="text-muted">Pay ৳100 to unlock file uploads</p>
+                {% if has_payment %}
+                <button class="btn btn-success" disabled>
+                    <i class="fas fa-check me-1"></i>Already Paid
+                </button>
+                {% else %}
+                <form method="post" action="{% url 'initiate_payment' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-play me-1"></i>Pay Now
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-upload fa-3x text-success mb-3"></i>
+                <h5>Upload Files</h5>
+                <p class="text-muted">Upload .txt or .docx files</p>
+                {% if has_payment %}
+                <a href="{% url 'upload_file' %}" class="btn btn-success">
+                    <i class="fas fa-cloud-upload-alt me-1"></i>Upload
+                </a>
+                {% else %}
+                <button class="btn btn-secondary" disabled>
+                    <i class="fas fa-lock me-1"></i>Payment Required
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-history fa-3x text-info mb-3"></i>
+                <h5>Transactions</h5>
+                <p class="text-muted">View payment history</p>
+                <a href="{% url 'transaction_list' %}" class="btn btn-info">
+                    <i class="fas fa-list me-1"></i>View All
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-3x text-warning mb-3"></i>
+                <h5>My Files</h5>
+                <p class="text-muted">Uploaded files & word counts</p>
+                <a href="{% url 'file_list' %}" class="btn btn-warning">
+                    <i class="fas fa-folder me-1"></i>View Files
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+{% if transactions %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Transactions</h5>
+                <a href="{% url 'transaction_list' %}" class="btn btn-light btn-sm">
+                    <i class="fas fa-external-link-alt me-1"></i>View All
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>{{ transaction.transaction_id }}</td>
+                                <td>৳{{ transaction.amount }}</td>
+                                <td>
+                                    {% if transaction.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif transaction.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% elif transaction.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ transaction.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ transaction.timestamp|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

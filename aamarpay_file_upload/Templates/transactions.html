@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions - aamarPay File Upload System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-history me-2"></i>Payment Transactions</h1>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction Summary -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <i class="fas fa-receipt fa-2x text-info mb-2"></i>
+                <h3 class="text-info">{{ total_transactions }}</h3>
+                <p class="mb-0">Total Transactions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                <h3 class="text-success">{{ completed_transactions }}</h3>
+                <p class="mb-0">Completed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                <h3 class="text-warning">{{ pending_transactions }}</h3>
+                <p class="mb-0">Pending</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+                <h3 class="text-danger">{{ failed_transactions }}</h3>
+                <p class="mb-0">Failed</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+{% if transactions %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Transactions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Amount</th>
+                                <th>Currency</th>
+                                <th>Status</th>
+                                <th>Gateway ID</th>
+                                <th>Date & Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>
+                                    <code>{{ transaction.transaction_id }}</code>
+                                </td>
+                                <td>
+                                    <strong>৳{{ transaction.amount }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ transaction.currency }}</span>
+                                </td>
+                                <td>
+                                    {% if transaction.status == 'completed' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Completed
+                                        </span>
+                                    {% elif transaction.status == 'pending' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock me-1"></i>Pending
+                                        </span>
+                                    {% elif transaction.status == 'failed' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>Failed
+                                        </span>
+                                    {% elif transaction.status == 'cancelled' %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-ban me-1"></i>Cancelled
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">{{ transaction.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if transaction.aamarpay_tran_id %}
+                                        <code>{{ transaction.aamarpay_tran_id }}</code>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>
+                                        {{ transaction.timestamp|date:"M d, Y" }}<br>
+                                        {{ transaction.timestamp|time:"H:i:s" }}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
+                <h3>No Transactions Found</h3>
+                <p class="text-muted">You haven't made any payments yet.</p>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                    <i class="fas fa-credit-card me-2"></i>Make Your First Payment
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
