@@ -14,19 +14,88 @@
     </div>
 </div>
 
+{% if has_payment %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Your File</h5>
+            </div>
+            <div class="card-body">
+                <!-- Replace the existing form with this -->
+                <form method="post" enctype="multipart/form-data" action="{% url 'upload_file' %}">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label for="file" class="form-label">Choose File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".txt,.docx" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Only .txt and .docx files are allowed. Maximum size: 10MB
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>What happens next?</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Your file will be uploaded securely</li>
+                            <li>Word count processing will start automatically</li>
+                            <li>You can view progress in "My Files" section</li>
+                            <li>Results will be available within minutes</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-upload me-2"></i>Upload File
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row g-3 mt-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-list fa-2x text-primary mb-2"></i>
+                        <h6>View My Files</h6>
+                        <a href="{% url 'file_list' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-folder me-1"></i>View Files
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-history fa-2x text-info mb-2"></i>
+                        <h6>View Transactions</h6>
+                        <a href="{% url 'transaction_list' %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-receipt me-1"></i>View History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
 <div class="row">
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center py-5">
-                <i class="fas fa-code fa-4x text-muted mb-3"></i>
-                <h3>File Upload Coming Soon</h3>
-                <p class="text-muted">{{ message }}</p>
-                <p class="text-muted">This feature will allow you to upload .txt and .docx files for word counting.</p>
+                <i class="fas fa-lock fa-4x text-warning mb-3"></i>
+                <h3>Payment Required</h3>
+                <p class="text-muted">You need to complete payment before uploading files.</p>
                 <a href="{% url 'dashboard' %}" class="btn btn-primary">
-                    <i class="fas fa-tachometer-alt me-2"></i>Return to Dashboard
+                    <i class="fas fa-credit-card me-2"></i>Make Payment
                 </a>
             </div>
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}

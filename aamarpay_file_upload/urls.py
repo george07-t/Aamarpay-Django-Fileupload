@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.shortcuts import redirect  # Add this import
+from django.shortcuts import redirect
 from . import views
 
 urlpatterns = [
@@ -18,15 +18,18 @@ urlpatterns = [
     # Payment URLs
     path('initiate-payment/', views.initiate_payment_view, name='initiate_payment'),
     
-    # Functional URLs 
+    # File Upload & Management URLs (Web Views)
     path('upload/', views.upload_file_view, name='upload_file'),
-    path('transactions/', views.transaction_list_view, name='transaction_list'),
     path('files/', views.file_list_view, name='file_list'),
+    path('files/delete/<int:file_id>/', views.delete_file_view, name='delete_file'),
+    path('transactions/', views.transaction_list_view, name='transaction_list'),
     
-    path('admin/', admin.site.urls),
+    # API URLs
     path('api/payments/', include('payments.urls')),
     path('api/uploads/', include('uploads.urls')),
     path('api/auth/', include('authentication.urls')),
+    
+    path('admin/', admin.site.urls),
 ]
 
 # Serve media files in development

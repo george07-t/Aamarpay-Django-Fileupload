@@ -7,25 +7,188 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1><i class="fas fa-file-alt me-2"></i>My Files</h1>
-            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-            </a>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-code fa-4x text-muted mb-3"></i>
-                <h3>File Upload Coming Soon</h3>
-                <p class="text-muted">{{ message }}</p>
-                <a href="{% url 'dashboard' %}" class="btn btn-primary">
-                    <i class="fas fa-tachometer-alt me-2"></i>Return to Dashboard
+            <div>
+                <a href="{% url 'upload_file' %}" class="btn btn-success me-2">
+                    <i class="fas fa-upload me-1"></i>Upload New File
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
                 </a>
             </div>
         </div>
     </div>
 </div>
+
+<!-- File Statistics -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <i class="fas fa-file fa-2x text-primary mb-2"></i>
+                <h3 class="text-primary">{{ total_files }}</h3>
+                <p class="mb-0">Total Files</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                <h3 class="text-success">{{ completed_files }}</h3>
+                <p class="mb-0">Completed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <i class="fas fa-spinner fa-2x text-warning mb-2"></i>
+                <h3 class="text-warning">{{ processing_files }}</h3>
+                <p class="mb-0">Processing</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <i class="fas fa-sort-numeric-up fa-2x text-info mb-2"></i>
+                <h3 class="text-info">{{ total_words|default:0 }}</h3>
+                <p class="mb-0">Total Words</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Files Table -->
+{% if files %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Uploaded Files</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Upload Time</th>
+                                <th>File Size</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Word Count</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in files %}
+                            <tr>
+                                <td>
+                                    <i class="fas fa-{% if file.file_type == '.txt' %}file-alt{% else %}file-word{% endif %} me-2"></i>
+                                    <strong>{{ file.filename }}</strong>
+                                </td>
+                                <td>
+                                    <small>
+                                        {{ file.upload_time|date:"M d, Y" }}<br>
+                                        {{ file.upload_time|time:"H:i:s" }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ file.get_file_size_display }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if file.file_type == '.txt' %}info{% else %}primary{% endif %}">
+                                        {{ file.file_type|upper }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if file.status == 'completed' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Completed
+                                        </span>
+                                    {% elif file.status == 'processing' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-spinner fa-spin me-1"></i>Processing
+                                        </span>
+                                    {% elif file.status == 'failed' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>Failed
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if file.status == 'completed' %}
+                                        <strong class="text-success">{{ file.word_count|default:0 }}</strong> words
+                                    {% elif file.status == 'processing' %}
+                                        <span class="text-muted">Processing...</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="confirmDelete('{{ file.filename }}', {{ file.id }})"
+                                            title="Delete File">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the file <strong id="deleteFileName"></strong>?</p>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="#" id="deleteConfirmBtn" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i>Delete File
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(filename, fileId) {
+    document.getElementById('deleteFileName').textContent = filename;
+    document.getElementById('deleteConfirmBtn').href = `/files/delete/${fileId}/`;
+    
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+</script>
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-file-upload fa-4x text-muted mb-3"></i>
+                <h3>No Files Uploaded</h3>
+                <p class="text-muted">You haven't uploaded any files yet.</p>
+                <a href="{% url 'upload_file' %}" class="btn btn-success">
+                    <i class="fas fa-upload me-2"></i>Upload Your First File
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

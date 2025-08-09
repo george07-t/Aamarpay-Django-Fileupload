@@ -199,6 +199,10 @@ LOGOUT_REDIRECT_URL = '/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Ensure media directory exists
+os.makedirs(MEDIA_ROOT, exist_ok=True)
+os.makedirs(os.path.join(MEDIA_ROOT, 'uploads'), exist_ok=True)
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery Configuration
@@ -223,6 +227,11 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = env('FILE_UPLOAD_MAX_SIZE')
 DATA_UPLOAD_MAX_MEMORY_SIZE = env('DATA_UPLOAD_MAX_SIZE')
 ALLOWED_FILE_EXTENSIONS = env.list('ALLOWED_FILE_EXTENSIONS', default=['.txt', '.docx'])
 
+# File Upload Handlers
+FILE_UPLOAD_HANDLERS = [
+    'django.core.files.uploadhandler.MemoryFileUploadHandler',
+    'django.core.files.uploadhandler.TemporaryFileUploadHandler',
+]
 # Cache Configuration
 CACHES = {
     'default': {

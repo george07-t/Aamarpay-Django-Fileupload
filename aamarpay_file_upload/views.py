@@ -5,6 +5,12 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db import IntegrityError
 from payments.models import PaymentTransaction
+from uploads.models import FileUpload, ActivityLog
+from uploads.tasks import process_file_word_count
+import os
+from uploads.models import FileUpload, ActivityLog
+from django.shortcuts import get_object_or_404
+
 
 def home_view(request):
     """Home page with MVT pattern"""
@@ -47,18 +53,23 @@ def transaction_list_view(request):
 
 @login_required
 def file_list_view(request):
-    """File list page (placeholder for now)"""
-    # This will be implemented when upload functionality is added
+    """File list page"""
+    files = FileUpload.objects.filter(user=request.user)
+    
     context = {
         'user': request.user,
-        'files': [],  # Empty for now
-        'message': 'File upload functionality will be implemented soon.'
+        'files': files,
+        'total_files': files.count(),
+        'completed_files': files.filter(status='completed').count(),
+        'processing_files': files.filter(status='processing').count(),
+        'failed_files': files.filter(status='failed').count(),
+        'total_words': sum(f.word_count for f in files.filter(status='completed')),
     }
     return render(request, 'files.html', context)
 
 @login_required 
 def upload_file_view(request):
-    """File upload page (placeholder for now)"""
+    """File upload page"""
     # Check if user has completed payment
     has_payment = PaymentTransaction.objects.filter(
         user=request.user,
@@ -69,12 +80,103 @@ def upload_file_view(request):
         messages.warning(request, 'Please complete payment before uploading files.')
         return redirect('dashboard')
     
+    if request.method == 'POST':
+        print(f"POST request received")
+        print(f"FILES: {request.FILES}")
+        print(f"POST data: {request.POST}")
+        
+        uploaded_file = request.FILES.get('file')
+        
+        if not uploaded_file:
+            messages.error(request, 'Please select a file to upload.')
+            return render(request, 'upload.html', {'has_payment': has_payment})
+        
+        print(f"File received: {uploaded_file.name}, Size: {uploaded_file.size}")
+        
+        # Validate file extension
+        allowed_extensions = ['.txt', '.docx']
+        file_extension = os.path.splitext(uploaded_file.name)[1].lower()
+        
+        if file_extension not in allowed_extensions:
+            messages.error(request, 'Only .txt and .docx files are allowed.')
+            return render(request, 'upload.html', {'has_payment': has_payment})
+        
+        # Validate file size (10MB)
+        if uploaded_file.size > 10 * 1024 * 1024:
+            messages.error(request, 'File size cannot exceed 10MB.')
+            return render(request, 'upload.html', {'has_payment': has_payment})
+        
+        try:
+            # Create file upload record
+            file_upload = FileUpload.objects.create(
+                user=request.user,
+                file=uploaded_file,
+                filename=uploaded_file.name,
+                file_size=uploaded_file.size,
+                file_type=file_extension
+            )
+            
+            print(f"FileUpload created: ID={file_upload.id}, Path={file_upload.file.path}")
+            
+            # Log activity
+            ActivityLog.objects.create(
+                user=request.user,
+                action='file_uploaded',
+                metadata={
+                    'filename': file_upload.filename,
+                    'file_size': file_upload.file_size,
+                    'file_type': file_upload.file_type
+                }
+            )
+            
+            # Trigger Celery task
+            task_result = process_file_word_count.delay(file_upload.id)
+            print(f"Celery task triggered: {task_result.id}")
+            
+            messages.success(request, f'File "{uploaded_file.name}" uploaded successfully! Word count processing started.')
+            return redirect('file_list')
+            
+        except Exception as e:
+            print(f"Error creating FileUpload: {str(e)}")
+            messages.error(request, f'Error uploading file: {str(e)}')
+            return render(request, 'upload.html', {'has_payment': has_payment})
+    
     context = {
         'user': request.user,
         'has_payment': has_payment,
-        'message': 'File upload functionality will be implemented soon.'
     }
     return render(request, 'upload.html', context)
+
+
+# Add this function at the end
+@login_required
+def delete_file_view(request, file_id):
+    """Delete file view"""
+    try:
+        file_upload = get_object_or_404(FileUpload, id=file_id, user=request.user)
+        
+        # Log activity before deletion
+        ActivityLog.objects.create(
+            user=request.user,
+            action='file_deleted',
+            metadata={
+                'filename': file_upload.filename,
+                'file_size': file_upload.file_size,
+                'file_type': file_upload.file_type,
+                'word_count': file_upload.word_count
+            }
+        )
+        
+        filename = file_upload.filename
+        file_upload.delete()  # This will also delete the physical file
+        
+        messages.success(request, f'File "{filename}" deleted successfully.')
+        
+    except Exception as e:
+        messages.error(request, f'Error deleting file: {str(e)}')
+    
+    return redirect('file_list')
+
 
 def login_view(request):
     """Login page"""
