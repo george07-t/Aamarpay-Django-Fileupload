@@ -1,0 +1,129 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: aamarpay_postgres
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: aamarpay_production_db
+      POSTGRES_USER: aamarpay_user
+      POSTGRES_PASSWORD: your_secure_postgres_password_123
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aamarpay_user -d aamarpay_production_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: aamarpay_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django Web Application
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: aamarpay_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+      - ./logs:/app/logs
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: >
+      sh -c "
+        python manage.py migrate &&
+        python manage.py collectstatic --noinput &&
+        python manage.py createcachetable &&
+        gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 aamarpay_file_upload.wsgi:application
+      "
+
+  # Celery Worker
+  celery:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: aamarpay_celery
+    restart: unless-stopped
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A aamarpay_file_upload worker --loglevel=info --concurrency=2
+
+  # Celery Beat (Optional - for scheduled tasks)
+  celery-beat:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: aamarpay_celery_beat
+    restart: unless-stopped
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A aamarpay_file_upload beat --loglevel=info
+
+  # Nginx (Optional - for production)
+  nginx:
+    image: nginx:alpine
+    container_name: aamarpay_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./staticfiles:/staticfiles
+      - ./media:/media
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: aamarpay_network

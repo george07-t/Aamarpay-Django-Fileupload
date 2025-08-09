@@ -90,11 +90,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Debug Toolbar (only in debug mode)
-if DEBUG:
-    MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
-    INSTALLED_APPS.append('debug_toolbar')
-    INTERNAL_IPS = ['127.0.0.1']
 
 ROOT_URLCONF = 'aamarpay_file_upload.urls'
 
@@ -292,14 +287,31 @@ LOG_DIR = os.path.join(BASE_DIR, 'logs')
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
-# Production Security Settings (only apply in production)
+# Production Docker Configuration
 if not DEBUG:
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+    # Static files with WhiteNoise
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    
+    # Allowed hosts for Docker
+    ALLOWED_HOSTS.extend(['web', 'nginx', '0.0.0.0'])
+    
+    # Logging for production
+    LOGGING['handlers']['file']['filename'] = '/app/logs/django.log'
+    
+    # Cache with Redis
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': env('CACHE_LOCATION'),
+            'TIMEOUT': env('CACHE_TIMEOUT'),
+        }
+    }
+
+# Remove debug toolbar in production
+if DEBUG and os.path.exists('/app'):  # Docker environment detection
+    pass  # Don't load debug toolbar in Docker
+elif DEBUG:
+    MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+    INSTALLED_APPS.append('debug_toolbar')
+    INTERNAL_IPS = ['127.0.0.1']

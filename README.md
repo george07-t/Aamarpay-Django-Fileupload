@@ -31,6 +31,15 @@ This project aims to provide a seamless integration with aamarPay, enabling secu
       AAMARPAY_SANDBOX_MODE=True
       ```
     - The application will automatically load these settings from the `.env` file.
+4. **Docker**
+    ```
+    celery -A aamarpay_file_upload worker --loglevel=info --pool=solo
+    docker-compose down
+    pip freeze > requirements.txt
+    docker-compose build --no-cache
+    docker-compose up -d
+    docker-compose logs web
+```
 
 ## Usage
 
