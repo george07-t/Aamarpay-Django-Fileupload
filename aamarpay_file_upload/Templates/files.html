@@ -8,6 +8,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1><i class="fas fa-file-alt me-2"></i>My Files</h1>
             <div>
+                <button id="refreshBtn" class="btn btn-info me-2" onclick="refreshPage()">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                </button>
                 <a href="{% url 'upload_file' %}" class="btn btn-success me-2">
                     <i class="fas fa-upload me-1"></i>Upload New File
                 </a>
@@ -18,6 +21,25 @@
         </div>
     </div>
 </div>
+
+<!-- Auto-refresh notification for processing files -->
+{% if processing_files > 0 %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-info alert-dismissible fade show">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Processing in Progress:</strong> 
+            {{ processing_files }} file{{ processing_files|pluralize }} currently being processed. 
+            This page will auto-refresh every 10 seconds.
+            <div class="progress mt-2" style="height: 6px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                     role="progressbar" style="width: 100%"></div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- File Statistics -->
 <div class="row g-4 mb-4">
@@ -83,7 +105,7 @@
                         </thead>
                         <tbody>
                             {% for file in files %}
-                            <tr>
+                            <tr class="{% if file.status == 'processing' %}table-warning{% endif %}">
                                 <td>
                                     <i class="fas fa-{% if file.file_type == '.txt' %}file-alt{% else %}file-word{% endif %} me-2"></i>
                                     <strong>{{ file.filename }}</strong>
@@ -109,8 +131,12 @@
                                         </span>
                                     {% elif file.status == 'processing' %}
                                         <span class="badge bg-warning">
-                                            <i class="fas fa-spinner fa-spin me-1"></i>Processing
+                                            <i class="fas fa-spinner fa-spin me-1"></i>Processing...
                                         </span>
+                                        <div class="progress mt-1" style="height: 4px;">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+                                                 role="progressbar" style="width: 100%"></div>
+                                        </div>
                                     {% elif file.status == 'failed' %}
                                         <span class="badge bg-danger">
                                             <i class="fas fa-times me-1"></i>Failed
@@ -121,17 +147,25 @@
                                     {% if file.status == 'completed' %}
                                         <strong class="text-success">{{ file.word_count|default:0 }}</strong> words
                                     {% elif file.status == 'processing' %}
-                                        <span class="text-muted">Processing...</span>
+                                        <span class="text-muted">
+                                            <i class="fas fa-spinner fa-spin me-1"></i>Counting...
+                                        </span>
                                     {% else %}
                                         <span class="text-muted">-</span>
                                     {% endif %}
                                 </td>
                                 <td>
+                                    {% if file.status != 'processing' %}
                                     <button class="btn btn-sm btn-outline-danger" 
                                             onclick="confirmDelete('{{ file.filename }}', {{ file.id }})"
                                             title="Delete File">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot delete while processing">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -166,6 +200,9 @@
 </div>
 
 <script>
+let autoRefreshInterval;
+let refreshCounter = 10;
+
 function confirmDelete(filename, fileId) {
     document.getElementById('deleteFileName').textContent = filename;
     document.getElementById('deleteConfirmBtn').href = `/files/delete/${fileId}/`;
@@ -173,6 +210,52 @@ function confirmDelete(filename, fileId) {
     var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
     deleteModal.show();
 }
+
+function refreshPage() {
+    const btn = document.getElementById('refreshBtn');
+    const icon = btn.querySelector('i');
+    
+    // Add spinning animation
+    icon.classList.add('fa-spin');
+    btn.disabled = true;
+    
+    // Refresh after animation
+    setTimeout(() => {
+        location.reload();
+    }, 500);
+}
+
+function startAutoRefresh() {
+    const processingFiles = {{ processing_files }};
+    
+    if (processingFiles > 0) {
+        autoRefreshInterval = setInterval(() => {
+            refreshCounter--;
+            
+            // Update any countdown display if you want
+            if (refreshCounter <= 0) {
+                location.reload();
+            }
+        }, 1000);
+        
+        // Also set a longer interval for refresh
+        setTimeout(() => {
+            location.reload();
+        }, 10000); // Refresh every 10 seconds
+    }
+}
+
+// Start auto-refresh when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startAutoRefresh();
+});
+
+// Clear interval when page is about to unload
+window.addEventListener('beforeunload', function() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+});
 </script>
 
 {% else %}

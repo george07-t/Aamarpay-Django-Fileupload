@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,35 +13,167 @@
 </head>
 
 <body>
+    <!-- Top Loading Progress Bar (Bootstrap Progress) -->
+    <div id="topProgress" class="position-fixed top-0 start-0 w-100 d-none" style="z-index: 1055;">
+        <div class="progress" style="height: 3px; border-radius: 0;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar"
+                style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay (Bootstrap Modal Style) -->
+    <div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body text-center py-5">
+                    <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 id="loadingText" class="text-primary">Processing...</h5>
+                    <p id="loadingSubtext" class="text-muted mb-0">Please wait while we process your request</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">
+            <a class="navbar-brand fw-bold" href="{% url 'home' %}">
                 <i class="fas fa-file-upload me-2"></i>aamarPay File Upload
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="navbar-nav ms-auto">
+                <!-- Removed repeated navigation links for authenticated users -->
+                <ul class="navbar-nav me-auto">
+                    <!-- You can add other navigation items here if needed -->
+                </ul>
+                <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i>{{ user.get_full_name|default:user.username }}
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
-                                <li><a class="dropdown-item" href="/admin/"><i class="fas fa-cog me-2"></i>Admin Panel</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                            </ul>
-                        </div>
+                    <!-- Enhanced User Profile Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <!-- User Avatar (Bootstrap Badge) -->
+                            <span
+                                class="badge bg-light text-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                style="width: 35px; height: 35px; font-size: 14px; font-weight: bold;">
+                                {{ user.first_name|first|default:user.username|first|upper }}
+                            </span>
+                            <span class="d-none d-md-inline">
+                                {{ user.get_full_name|default:user.username }}
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 300px;">
+                            <!-- User Profile Header -->
+                            <li class="dropdown-header border-bottom pb-3 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <span
+                                        class="badge bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                        style="width: 50px; height: 50px; font-size: 18px;">
+                                        {{ user.first_name|first|default:user.username|first|upper }}
+                                    </span>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold">{{ user.get_full_name|default:user.username }}</h6>
+                                        <small class="text-muted">{{ user.email|default:"No email" }}</small>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            Joined {{ user.date_joined|date:"M Y" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </li>
+
+                            <!-- User Status -->
+                            <li class="dropdown-item-text">
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <small class="text-muted">Status:</small>
+                                        <br>
+                                        {% if user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Role:</small>
+                                        <br>
+                                        {% if user.is_superuser %}
+                                        <span class="badge bg-danger">Admin</span>
+                                        {% elif user.is_staff %}
+                                        <span class="badge bg-warning">Staff</span>
+                                        {% else %}
+                                        <span class="badge bg-info">User</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <!-- Quick Actions -->
+                            <li>
+                                <a class="dropdown-item" href="{% url 'dashboard' %}">
+                                    <i class="fas fa-tachometer-alt me-2 text-primary"></i>Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'file_list' %}">
+                                    <i class="fas fa-file-alt me-2 text-success"></i>My Files
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'transaction_list' %}">
+                                    <i class="fas fa-receipt me-2 text-info"></i>Transaction History
+                                </a>
+                            </li>
+
+                            {% if user.is_staff %}
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/admin/" target="_blank">
+                                    <i class="fas fa-cog me-2 text-warning"></i>Admin Panel
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'logout' %}"
+                                    onclick="showLoading('Logging out...', 'See you soon!')">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                     {% else %}
-                        <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt me-1"></i>Login</a>
-                        <a class="nav-link" href="{% url 'register' %}"><i class="fas fa-user-plus me-1"></i>Register</a>
-                        <a class="nav-link" href="/admin/"><i class="fas fa-cog me-1"></i>Admin</a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">
+                            <i class="fas fa-user-plus me-1"></i>Register
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/" target="_blank">
+                            <i class="fas fa-cog me-1"></i>Admin
+                        </a>
+                    </li>
                     {% endif %}
-                </div>
+                </ul>
             </div>
         </div>
     </nav>
@@ -49,26 +182,122 @@
     <main class="container my-4">
         <!-- Alert Messages -->
         {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+            {% if message.tags == 'success' %}
+            <i class="fas fa-check-circle me-2"></i>
+            {% elif message.tags == 'error' %}
+            <i class="fas fa-exclamation-circle me-2"></i>
+            {% elif message.tags == 'warning' %}
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {% else %}
+            <i class="fas fa-info-circle me-2"></i>
+            {% endif %}
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
         {% endif %}
 
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="bg-light py-4 mt-5">
+    <footer class="bg-light py-4 mt-5 border-top">
         <div class="container text-center">
-            <p class="mb-0">&copy; 2025 aamarPay File Upload System. Built with Django & Bootstrap.</p>
+            <p class="mb-0 text-muted">
+                <i class="fas fa-code me-1"></i>
+                &copy; 2025 aamarPay File Upload System. Built with Django & Bootstrap.
+            </p>
         </div>
     </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Bootstrap Loading Management
+        let loadingModal;
+
+        function showLoading(text = 'Processing...', subtext = 'Please wait while we process your request') {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingSubtext').textContent = subtext;
+
+            // Show progress bar
+            const progressContainer = document.getElementById('topProgress');
+            const progressBar = progressContainer.querySelector('.progress-bar');
+            progressContainer.classList.remove('d-none');
+            progressBar.style.width = '30%';
+
+            // Show modal
+            loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            loadingModal.show();
+
+            // Animate progress
+            setTimeout(() => {
+                progressBar.style.width = '70%';
+            }, 500);
+
+            setTimeout(() => {
+                progressBar.style.width = '100%';
+            }, 1000);
+        }
+
+        function hideLoading() {
+            if (loadingModal) {
+                loadingModal.hide();
+            }
+            document.getElementById('topProgress').classList.add('d-none');
+            document.querySelector('#topProgress .progress-bar').style.width = '0%';
+        }
+
+        function showButtonLoading(button) {
+            const originalContent = button.innerHTML;
+            const spinner = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>';
+            button.innerHTML = spinner + 'Processing...';
+            button.disabled = true;
+            return originalContent;
+        }
+
+        function hideButtonLoading(button, originalContent) {
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        }
+
+        // Form submission handlers
+        function handleFormSubmit(form, loadingText, subtext) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                showButtonLoading(submitBtn);
+            }
+            showLoading(loadingText, subtext);
+        }
+
+        // Auto-hide loading on page load
+        window.addEventListener('load', function () {
+            hideLoading();
+        });
+
+        // Handle browser back button
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                hideLoading();
+            }
+        });
+
+        // Auto-dismiss alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+                alerts.forEach(function (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

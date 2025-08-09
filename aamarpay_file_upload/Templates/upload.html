@@ -17,51 +17,86 @@
 {% if has_payment %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Your File</h5>
+                <h5 class="mb-0">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>Upload Your File
+                </h5>
             </div>
-            <div class="card-body">
-                <!-- Replace the existing form with this -->
-                <form method="post" enctype="multipart/form-data" action="{% url 'upload_file' %}">
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data" id="uploadForm" 
+                      onsubmit="handleFormSubmit(this, 'Uploading your file...', 'Processing and starting word count analysis')"
+                      action="{% url 'upload_file' %}">
                     {% csrf_token %}
-
+                    
                     <div class="mb-4">
-                        <label for="file" class="form-label">Choose File</label>
-                        <input type="file" class="form-control" id="file" name="file" accept=".txt,.docx" required>
+                        <label for="file" class="form-label">
+                            <i class="fas fa-file me-1"></i>Choose File
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-file text-success"></i>
+                            </span>
+                            <input type="file" class="form-control" id="file" name="file" 
+                                   accept=".txt,.docx" required onchange="validateFile(this)">
+                        </div>
                         <div class="form-text">
                             <i class="fas fa-info-circle me-1"></i>
                             Only .txt and .docx files are allowed. Maximum size: 10MB
                         </div>
+                        <div id="fileInfo" class="mt-2"></div>
                     </div>
-
-                    <div class="alert alert-info">
-                        <i class="fas fa-lightbulb me-2"></i>
-                        <strong>What happens next?</strong>
-                        <ul class="mb-0 mt-2">
-                            <li>Your file will be uploaded securely</li>
-                            <li>Word count processing will start automatically</li>
-                            <li>You can view progress in "My Files" section</li>
-                            <li>Results will be available within minutes</li>
-                        </ul>
+                    
+                    <div class="alert alert-info border-0 alert-permanent">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-lightbulb me-2"></i>What happens next?
+                        </h6>
+                        <div class="row g-2 mt-2">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-circle me-2">1</span>
+                                    <small>File uploaded securely</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-circle me-2">2</span>
+                                    <small>Word counting starts automatically</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-circle me-2">3</span>
+                                    <small>Monitor progress in "My Files"</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-circle me-2">4</span>
+                                    <small>Results in 5-15 seconds</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
+                    
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-upload me-2"></i>Upload File
+                        <button type="submit" class="btn btn-success btn-lg" id="uploadBtn">
+                            <i class="fas fa-upload me-2"></i>
+                            Upload File
                         </button>
                     </div>
                 </form>
             </div>
         </div>
-
+        
         <!-- Quick Actions -->
         <div class="row g-3 mt-4">
             <div class="col-md-6">
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm h-100">
                     <div class="card-body text-center">
-                        <i class="fas fa-list fa-2x text-primary mb-2"></i>
-                        <h6>View My Files</h6>
+                        <i class="fas fa-list fa-2x text-primary mb-3 d-block"></i>
+                        <h6 class="card-title">View My Files</h6>
+                        <p class="card-text text-muted small">Check upload status and word counts</p>
                         <a href="{% url 'file_list' %}" class="btn btn-primary btn-sm">
                             <i class="fas fa-folder me-1"></i>View Files
                         </a>
@@ -69,10 +104,11 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm h-100">
                     <div class="card-body text-center">
-                        <i class="fas fa-history fa-2x text-info mb-2"></i>
-                        <h6>View Transactions</h6>
+                        <i class="fas fa-history fa-2x text-info mb-3 d-block"></i>
+                        <h6 class="card-title">View Transactions</h6>
+                        <p class="card-text text-muted small">Check your payment history</p>
                         <a href="{% url 'transaction_list' %}" class="btn btn-info btn-sm">
                             <i class="fas fa-receipt me-1"></i>View History
                         </a>
@@ -85,12 +121,12 @@
 {% else %}
 <div class="row">
     <div class="col-12">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow">
             <div class="card-body text-center py-5">
-                <i class="fas fa-lock fa-4x text-warning mb-3"></i>
+                <i class="fas fa-lock fa-4x text-warning mb-4 d-block"></i>
                 <h3>Payment Required</h3>
-                <p class="text-muted">You need to complete payment before uploading files.</p>
-                <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                <p class="text-muted mb-4">You need to complete payment of ৳100 before uploading files.</p>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
                     <i class="fas fa-credit-card me-2"></i>Make Payment
                 </a>
             </div>
@@ -98,4 +134,63 @@
     </div>
 </div>
 {% endif %}
+
+<script>
+function validateFile(input) {
+    const fileInfo = document.getElementById('fileInfo');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const fileSize = file.size;
+        const fileName = file.name;
+        const fileType = fileName.split('.').pop().toLowerCase();
+        
+        // Check file type
+        if (!['txt', 'docx'].includes(fileType)) {
+            fileInfo.innerHTML = `
+                <div class="alert alert-danger alert-sm py-2 border-0">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>Invalid file type!</strong> Only .txt and .docx files are allowed.
+                </div>
+            `;
+            uploadBtn.disabled = true;
+            return;
+        }
+        
+        // Check file size (10MB = 10 * 1024 * 1024 bytes)
+        if (fileSize > 10 * 1024 * 1024) {
+            fileInfo.innerHTML = `
+                <div class="alert alert-danger alert-sm py-2 border-0">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>File too large!</strong> Maximum size is 10MB.
+                </div>
+            `;
+            uploadBtn.disabled = true;
+            return;
+        }
+        
+        // File is valid
+        const fileSizeFormatted = formatFileSize(fileSize);
+        fileInfo.innerHTML = `
+            <div class="alert alert-success alert-sm py-2 border-0">
+                <i class="fas fa-check-circle me-1"></i>
+                <strong>${fileName}</strong> (${fileSizeFormatted}) - Ready to upload
+            </div>
+        `;
+        uploadBtn.disabled = false;
+    } else {
+        fileInfo.innerHTML = '';
+        uploadBtn.disabled = false;
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+</script>
 {% endblock %}

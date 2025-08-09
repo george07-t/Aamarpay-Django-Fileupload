@@ -52,7 +52,6 @@ PREINSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "debug_toolbar",
     "rest_framework",
     'rest_framework.authtoken',
     'django_extensions',
@@ -94,6 +93,7 @@ MIDDLEWARE = [
 # Debug Toolbar (only in debug mode)
 if DEBUG:
     MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+    INSTALLED_APPS.append('debug_toolbar')
     INTERNAL_IPS = ['127.0.0.1']
 
 ROOT_URLCONF = 'aamarpay_file_upload.urls'
