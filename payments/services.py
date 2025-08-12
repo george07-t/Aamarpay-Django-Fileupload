@@ -53,7 +53,6 @@ class AamarPayService:
             "fail_url": self.fail_url,
             "cancel_url": self.cancel_url,
             "type": "json",
-            # Optional fields
             "cus_add1": "Dhaka",
             "cus_city": "Dhaka",
             "cus_state": "Dhaka",

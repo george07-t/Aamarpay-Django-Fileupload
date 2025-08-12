@@ -22,7 +22,7 @@
     </div>
 </div>
 
-<!-- Auto-refresh notification for processing files -->
+<!-- Auto-refresh notification-->
 {% if processing_files > 0 %}
 <div class="row mb-3">
     <div class="col-12">
@@ -232,13 +232,11 @@ function startAutoRefresh() {
         autoRefreshInterval = setInterval(() => {
             refreshCounter--;
             
-            // Update any countdown display if you want
             if (refreshCounter <= 0) {
                 location.reload();
             }
         }, 1000);
         
-        // Also set a longer interval for refresh
         setTimeout(() => {
             location.reload();
         }, 10000); // Refresh every 10 seconds

@@ -95,7 +95,6 @@ def count_words_txt(file_path):
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()
     except UnicodeDecodeError:
-        # Try with different encoding
         try:
             with open(file_path, 'r', encoding='latin-1') as file:
                 content = file.read()
@@ -103,7 +102,6 @@ def count_words_txt(file_path):
             with open(file_path, 'r', encoding='cp1252') as file:
                 content = file.read()
     
-    # Remove extra whitespace and split by whitespace
     words = re.findall(r'\b\w+\b', content)
     return len(words)
 
@@ -119,8 +117,7 @@ def count_words_docx(file_path):
     for paragraph in doc.paragraphs:
         words = re.findall(r'\b\w+\b', paragraph.text)
         word_count += len(words)
-    
-    # Also count words in tables
+
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:

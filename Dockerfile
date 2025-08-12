@@ -38,10 +38,8 @@ RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
-
-# Remove collectstatic from here - will run in docker-compose
-# RUN python manage.py collectstatic --noinput
-
+# Collect static files
+RUN python manage.py collectstatic --noinput
 # Expose port
 EXPOSE 8000
 

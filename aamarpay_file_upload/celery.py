@@ -7,14 +7,12 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aamarpay_file_upload.settings')
 
 app = Celery('aamarpay_file_upload')
 
-# Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
 
-# Optional configuration for development
 if settings.DEBUG:
     app.conf.update(
         task_always_eager=False,

@@ -88,7 +88,6 @@ class PaymentSuccessView(View):
                 transaction = result['transaction']
                 
                 if transaction.status == 'completed':
-                    # Redirect to success page or dashboard
                     return redirect('/dashboard/?payment=success')
                 else:
                     return redirect('/dashboard/?payment=failed')
@@ -100,7 +99,6 @@ class PaymentSuccessView(View):
             return redirect('/dashboard/?payment=error')
     
     def get(self, request):
-        # Handle GET request (just in case)
         return JsonResponse({
             'message': 'Payment success endpoint',
             'method': 'GET'

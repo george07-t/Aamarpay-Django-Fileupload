@@ -29,4 +29,3 @@ class PaymentCallbackSerializer(serializers.Serializer):
     cus_name = serializers.CharField(required=False)
     cus_email = serializers.CharField(required=False)
     cus_phone = serializers.CharField(required=False)
-    # Add other fields as needed

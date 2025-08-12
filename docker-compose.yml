@@ -86,7 +86,7 @@ services:
         condition: service_healthy
     command: celery -A aamarpay_file_upload worker --loglevel=info --concurrency=2
 
-  # Celery Beat (Optional - for scheduled tasks)
+  # Celery Beat
   celery-beat:
     build: 
       context: .
@@ -105,7 +105,7 @@ services:
         condition: service_healthy
     command: celery -A aamarpay_file_upload beat --loglevel=info
 
-  # Nginx (Optional - for production)
+  # Nginx
   nginx:
     image: nginx:alpine
     container_name: aamarpay_nginx

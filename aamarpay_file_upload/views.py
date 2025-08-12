@@ -147,8 +147,6 @@ def upload_file_view(request):
     }
     return render(request, 'upload.html', context)
 
-
-# Add this function at the end
 @login_required
 def delete_file_view(request, file_id):
     """Delete file view"""
@@ -168,8 +166,7 @@ def delete_file_view(request, file_id):
         )
         
         filename = file_upload.filename
-        file_upload.delete()  # This will also delete the physical file
-        
+        file_upload.delete()          
         messages.success(request, f'File "{filename}" deleted successfully.')
         
     except Exception as e:
@@ -192,8 +189,6 @@ def login_view(request):
             if user:
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.get_full_name() or user.username}!')
-                
-                # Redirect to next URL if provided, otherwise dashboard
                 next_url = request.GET.get('next', 'dashboard')
                 return redirect(next_url)
             else:

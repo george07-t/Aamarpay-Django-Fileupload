@@ -86,7 +86,7 @@ class FileDeleteAPIView(APIView):
             )
             
             filename = file_upload.filename
-            file_upload.delete()  # This will also delete the physical file
+            file_upload.delete()
             
             return Response(
                 {'message': f'File "{filename}" deleted successfully'},
@@ -134,7 +134,6 @@ def list_user_activities(request):
     })
 
 
-# Web Views for Frontend
 @login_required
 @require_http_methods(["GET", "POST", "DELETE"])
 def upload_file_view(request):
@@ -253,7 +252,7 @@ def delete_file_view(request, file_id):
         )
         
         filename = file_upload.filename
-        file_upload.delete()  # This will also delete the physical file
+        file_upload.delete() 
         
         messages.success(request, f'File "{filename}" deleted successfully.')
         
