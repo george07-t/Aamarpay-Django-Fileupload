@@ -137,7 +137,7 @@ graph TB
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/george07-t/Aamarpay-Django-Fileupload.git
+   git clone https://github.com/george07-t/Aamarpay-Django-Fileupload-George.git
    cd Aamarpay-Django-Fileupload
    ```
 
